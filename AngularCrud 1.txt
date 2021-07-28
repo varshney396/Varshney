@@ -1,0 +1,410 @@
+1. Create New angular app-----ng new myangular
+2. Install Bootstrap------npm install bootstrap 
+3. angular json------ 
+"styles": [
+     "node_modules/bootstrap/dist/css/bootstrap.min.css",
+]
+4. create component---ng g component student/list
+                      ng g component student/add
+                      ng g component student/edit
+
+
+Perform A crud Operation--------------------
+
+1.  src/app/student/list/list.component.html---------
+
+    <div class="col-md-6 container">
+  <h2 style="margin: auto"> Student Details</h2>
+  <button class="btn btn-primary" (click)="addStudent()">Add Student</button>
+  <table class="table table-striped">
+    <thead>
+    <tr>
+      <th>Id</th>
+      <th>FirstName</th>
+      <th>LastName</th>
+      <th>DOB</th>
+      <th>Location</th>
+      <th>email-id</th>
+      <th>phone no.</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let student of students">
+      <td>{{ student.id }}</td>
+      <td>{{ student.first_name }}</td>
+      <td>{{ student.last_name }}</td>
+      <td>{{ student.dob }}</td>
+      <td>{{ student.Location }}</td>
+      <td>{{ student.email-id }}</td>
+      <td>{{ student.phone-no. }}</td>
+      <td><button class="btn btn-danger" (click)="deleteStudent(student)"> Delete</button>
+        <button class="btn btn-success" (click)="editStudent(student)" style="margin-left: 20px;"> Edit</button></td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
+2.     src/app/student/list/list.component.ts-------
+
+
+import { Component, ngOnInit } from '@angular/core';
+import {Router} from "@angular/router";
+import { Student } from '../student';
+import {StudentService } from "../student.service";
+ 
+@Component({
+  selector: 'app-list',
+  templateUrl: './list.component.html',
+  styleUrls: ['./list.component.css']
+})
+export class ListComponent implements ngOnInit {
+ 
+  students: Student[];
+ 
+  constructor(private router: Router, private studentService: StudentService) { }
+ 
+  ngOnInit(): void {
+    this.studentService.getStudents()
+      .subscribe( data => {
+        this.students = data.result;
+      });
+  }
+ 
+  deleteStudent(student: Student): void {
+    this.studentService.deleteStudent(student.id)
+      .subscribe( data => {
+        this.students = this.students.filter(u => u !== student);
+      })
+  };
+ 
+  editStudent(student: Student): void {
+    window.localStorage.removeItem("editStudentId");
+    window.localStorage.setItem("editStudentId", student.id.toString());
+    this.router.navigate(['edit']);
+  };
+ 
+  addStudent(): void {
+    this.router.navigate(['add']);
+  };
+ 
+}
+
+
+
+
+3.   src/app/student/add/add.component.html---------
+
+
+<div class="col-md-6 container">
+  <h2 class="text-center">Add Student</h2>
+  <form [formGroup]="addForm" (ngSubmit)="onSubmit()">
+ 
+    <div class="form-group">
+      <label for="first_name">First Name:</label>
+      <input formControlName="first_name" placeholder="First Name" name="first_name" class="form-control" id="first_name">
+    </div>
+ 
+    <div class="form-group">
+      <label for="lastName">Last Name:</label>
+      <input formControlName="last_name" placeholder="Last name" name="last_name" class="form-control" id="last_name">
+    </div>
+ 
+ <div class="form-group">
+      <label for="dob">dob:</label>
+      <input formControlName="dob" placeholder="DOB" name="dob" class="form-control" id="dob">
+    </div>
+
+
+ <div class="form-group">
+      <label for="email-id">email-id:</label>
+      <input formControlName="email-id" placeholder="Email-id" name="email-id" class="form-control" id="email-id">
+    </div>
+
+
+ <div class="form-group">
+      <label for="phone no.">phone no:</label>
+      <input formControlName="phone-no." placeholder="Phone no." name="phone no." class="form-control" id="phone no.">
+    </div>
+
+
+ <div class="form-group">
+      <label for="location">location:</label>
+      <input formControlName="location" placeholder="location" name="location" class="form-control" id="location">
+    </div>
+ 
+    <button class="btn btn-success">Add</button>
+  </form>
+</div>
+
+
+4.  src/app/student/add/add.component.ts-------
+
+
+import { Component, ngOnInit } from '@angular/core';
+import { FormGroup, FormControl, Validators, FormBuilder }  from '@angular/forms';
+import {Router} from "@angular/router";
+import {StudentService } from "../student.service";
+@Component({
+  selector: 'app-add',
+  templateUrl: './add.component.html',
+  styleUrls: ['./add.component.css']
+})
+export class AddComponent implements ngOnInit {
+ 
+  constructor(private formBuilder: FormBuilder,private router: Router, private studentService: StudentService) { }
+  addForm: FormGroup;
+ 
+  ngOnInit(): void {
+    this.addForm = this.formBuilder.group({
+      id: [],
+      first_name: ['', Validators.required],
+      last_name: ['', Validators.required],
+      dob: ['', Validators.required],
+      email-id: ['', Validators.required],
+      location: ['', Validators.required],
+      phone no: ['', Validators.required]
+    });
+  }
+ngonSubmit() {
+    this.studentService.createStudent(this.addForm.value)
+      .subscribe( data => {
+        this.router.navigate(['list']);
+      });
+  } 
+}
+
+
+5.  src/app/student/edit/edit.component.html------
+
+<div class="col-md-6 container">
+  <h2 class="text-center">Edit Student</h2>
+  <form [formGroup]="editForm" (ngSubmit)="ngonSubmit()">
+    <div class="hidden">
+      <input type="text" formControlName="id" placeholder="id" name="id" class="form-control" id="id">
+    </div>
+ 
+ <div class="form-group">
+      <label for="first_name">First Name:</label>
+      <input formControlName="first_name" placeholder="First Name" name="first_name" class="form-control" id="first_name">
+    </div>
+ 
+    <div class="form-group">
+      <label for="lastName">Last Name:</label>
+      <input formControlName="last_name" placeholder="Last name" name="last_name" class="form-control" id="last_name">
+    </div>
+ 
+ <div class="form-group">
+      <label for="dob">DOB:</label>
+      <input formControlName="dob" placeholder="DOB" name="dob" class="form-control" id="dob">
+    </div>
+
+ <div class="form-group">
+      <label for="email-id">email-id:</label>
+      <input formControlName="email-id" placeholder="Email-id" name="email-id" class="form-control" id="email-id">
+    </div>
+
+ <div class="form-group">
+      <label for="location">Location:</label>
+      <input formControlName="location" placeholder="location" name="location" class="form-control" id="location">
+    </div>
+
+ <div class="form-group">
+      <label for="phone no.">Phone no:</label>
+      <input formControlName="phone-no" placeholder="phone-no" name="phone-no" class="form-control" id="phone-no">
+    </div>
+ 
+    <button class="btn btn-success">Update</button>
+  </form>
+</div>
+
+6.    src/app/student/edit/edit.component.ts-----
+
+
+import { Component, ngOnInit } from '@angular/core';
+import {FormBuilder, FormGroup, Validators} from "@angular/forms";
+import {Router} from "@angular/router";
+import { Student } from '../student';
+import {StudentService } from "../student.service";
+import {first} from "rxjs/operators";
+@Component({
+  selector: 'app-edit',
+  templateUrl: './edit.component.html',
+  styleUrls: ['./edit.component.css']
+})
+export class EditComponent implements ngOnInit {
+ 
+   student: Student;
+  editForm: FormGroup;
+  constructor(private formBuilder: FormBuilder,private router: Router, private studentService: StudentService) { }
+ 
+  ngOnInit() {
+    let studentId = window.localStorage.getItem("editStudentId");
+    if(!studentId) {
+      alert("Invalid action.")
+      this.router.navigate(['list']);
+      return;
+    }
+    this.editForm = this.formBuilder.group({
+      id: [''],
+      first_name: ['', Validators.required],
+      last_name: ['', Validators.required],
+      dob: ['', Validators.required],
+      email-id: ['', Validators.required],
+      location: ['', Validators.required]
+      phone no: ['', Validators.required]
+    });
+    this.studentService.getStudentById(+studentId)
+      .subscribe( data => {
+        this.editForm.setValue(data);
+      });
+  }
+ 
+  onSubmit() {
+    this.studentService.updateStudent(this.editForm.value)
+      .pipe(first())
+      .subscribe(
+        data => {
+          if(data.status === 200) {
+            alert('Student updated successfully.');
+            this.router.navigate(['list']);
+          }else {
+            alert('somthing went to wrong!');
+          }
+        },
+        error => {
+          alert(error);
+        });
+  }
+ 
+}
+
+
+7.    src/app/student/student.ts-------
+	
+export interface Student {
+ id: number;
+    first_name: string;
+    last_name: string;
+    dob: string;
+    email-id: string;
+    location: string;
+    phone no: string;
+}
+
+
+8.  creating angular app services-----
+
+   ng generate service student/student
+
+9.   src/app/student/student.service.ts-------
+
+
+import { Injectable } from '@angular/core';
+import { HttpClient,HttpHeaders } from '@angular/common/http';
+import { Student } from './student';
+import {  Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+ 
+@Injectable({
+  providedIn: 'root'
+})
+export class StudentService {
+ 
+  constructor(private httpClient: HttpClient) { }
+  baseUrl: string = 'http://localhost/codeigniter4_rest_api/student';
+  
+   httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json'
+    })
+  }
+ 
+  getStudents() : Observable<Student> {
+ 
+    return this.httpClient.get<Student>(this.baseUrl);
+  }
+  
+ 
+  getStudentById(id: number): Observable<Student> {
+   console.log(id);
+    return this.httpClient.get<Student>(this.baseUrl+'/'+ id);
+  }
+ 
+  createStudent(student: Student): Observable<Student> {
+   console.log('create');
+    return this.httpClient.post<Student>(this.baseUrl, student);
+  }
+ 
+  updateStudent(student: Student): Observable<Student> {
+    return this.httpClient.put<Student>(this.baseUrl+'/'+ student.id, student);
+  }
+ 
+  deleteStudent(id: number): Observable<Student> {
+    return this.httpClient.delete<Student>(this.baseUrl+'/'+ id);
+  }
+}
+
+
+10. (Routing Module)  src/app/app-routing.module.ts------
+
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router';
+ 
+import {AddComponent} from "./student/add/add.component";
+import {ListComponent} from "./student/list/list.component";
+import {EditComponent} from "./student/edit/edit.component";
+ 
+const routes: Routes = [
+{ path: 'add', component: AddComponent },
+  { path: 'list', component: ListComponent },
+  { path: 'edit', component: EditComponent },
+  {path : '', component : ListComponent}
+];
+ 
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+
+11.   (App module)  src/app/app.module.ts-----
+
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+import {HttpClientModule} from '@angular/common/http'; 
+import { FormsModule, ReactiveFormsModule} from '@angular/forms';
+ 
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { ListComponent } from './student/list/list.component';
+import { AddComponent } from './student/add/add.component';
+import { EditComponent } from './student/edit/edit.component';
+ 
+@NgModule({
+  declarations: [
+    AppComponent,
+    ListComponent,
+    AddComponent,
+    EditComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule,
+    ReactiveFormsModule,
+    HttpClientModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+
+11.  Run Angular-----
+
+ng serve
